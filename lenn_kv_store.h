@@ -1,5 +1,6 @@
 #ifndef LENN_KV_STORE_H_
 #define LENN_KV_STORE_H_
+#include <unistd.h>
 
 #define BUFFER_LENGTH		512
 
@@ -24,7 +25,7 @@ struct conn_item {
 struct lenn_kv_array_s {
     char* key;
     char* val;
-}
+};
 #define ARRAY_MAX_LENGTH    1024
 
 typedef struct conn_item conn_item_t;
@@ -34,7 +35,6 @@ int reactor_entry();
 
 void* lenn_kv_malloc(size_t size);
 void lenn_kv_free(void* ptr);
-
 int lenn_kv_request(conn_item_t* item);
 
 int lenn_kv_array_set(char* key, char* val);

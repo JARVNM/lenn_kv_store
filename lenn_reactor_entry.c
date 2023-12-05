@@ -88,10 +88,9 @@ int accept_cb(int fd) {
 
 int recv_cb(int fd) { // fd --> EPOLLIN
 
+	memset(&connlist[fd], 0, BUFFER_LENGTH);
 	char *buffer = connlist[fd].rbuffer;
-	int idx = connlist[fd].rlen;
-	
-	int count = recv(fd, buffer+idx, BUFFER_LENGTH-idx, 0);
+	int count = recv(fd, buffer, BUFFER_LENGTH, 0);
 	if (count == 0) {
 		printf("disconnect\n");
 
@@ -100,22 +99,10 @@ int recv_cb(int fd) { // fd --> EPOLLIN
 		
 		return -1;
 	}
-	connlist[fd].rlen += count;
-
-#if 1 //echo: need to send
-	memcpy(connlist[fd].wbuffer, connlist[fd].rbuffer, connlist[fd].rlen);
-	connlist[fd].wlen = connlist[fd].rlen;
-	connlist[fd].rlen -= connlist[fd].rlen;
-#else
-
-	//http_request(&connlist[fd]);
-	//http_response(&connlist[fd]);
-
-#endif
-
+	connlist[fd].rlen = count;
+	lenn_kv_request(&connlist[fd]);
+	connlist[fd].wlen = strlen(connlist[fd].wbuffer);
 	set_event(fd, EPOLLOUT, 0);
-
-	
 	return count;
 }
 
@@ -125,7 +112,7 @@ int send_cb(int fd) {
 	int idx = connlist[fd].wlen;
 
 	int count = send(fd, buffer, idx, 0);
-
+	memset(&connlist[fd].wbuffer, 0, BUFFER_LENGTH);
 	set_event(fd, EPOLLIN, 0);
 
 	return count;

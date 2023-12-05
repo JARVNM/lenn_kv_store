@@ -7,7 +7,7 @@
 
 #define LENN_KV_MAX_TOKEN   128
 
-const char* commands = {
+const char* commands[] = {
     "SET", "GET", "DEL", "MOD"
 };
 
@@ -59,19 +59,40 @@ int lenn_kv_analyze_protocol(conn_item_t* item, char** tokens, int count)
             break;
     }
 
+    int ret = 0;
     switch(i)
     {
         case LENN_KV_CMD_SET:
             printf("cmd: set\r\n");
+            ret = lenn_kv_array_set(tokens[1], tokens[2]);
+            if(ret < 0)
+                snprintf(item->wbuffer, BUFFER_LENGTH, "FAILED");
+            else
+                snprintf(item->wbuffer, BUFFER_LENGTH, "SUCCESS");
             break;
         case LENN_KV_CMD_GET:
             printf("cmd: get\r\n");
+            char* val = lenn_kv_array_get(tokens[1]);
+            if(val)
+                snprintf(item->wbuffer, BUFFER_LENGTH, "value is %s", val);
+            else
+                snprintf(item->wbuffer, BUFFER_LENGTH, "FAiled");
             break;
         case LENN_KV_CMD_DEL:
             printf("cmd: del\r\n");
+            ret = lenn_kv_array_del(tokens[1]);
+            if(ret < 0)
+                snprintf(item->wbuffer, BUFFER_LENGTH, "FAILED");
+            else
+                snprintf(item->wbuffer, BUFFER_LENGTH, "SUCCESS");
             break;
         case LENN_KV_CMD_MOD:
             printf("cmd: mod\r\n");
+            ret = lenn_kv_array_mod(tokens[1], tokens[2], tokens[3]);
+            if(ret < 0)
+                snprintf(item->wbuffer, BUFFER_LENGTH, "FAILED");
+            else
+                snprintf(item->wbuffer, BUFFER_LENGTH, "SUCCESS");
             break;
         default:
             assert(0);
@@ -83,7 +104,15 @@ int lenn_kv_request(conn_item_t* item)
     char* msg = item->rbuffer;
     char* token[LENN_KV_MAX_TOKEN] = {0};
     int nb_token = lenn_kv_split_tokens(msg, token);
+    int idx = 0;
+    for(idx; idx < nb_token; idx++)
+    {
+        printf("idx: %d,  token: %s\r\n", idx, token[idx]);
+    }
 
+    lenn_kv_analyze_protocol(item, token, nb_token);
+
+    return 0;
 }
 
 int main()
