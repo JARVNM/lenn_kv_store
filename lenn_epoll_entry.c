@@ -141,7 +141,7 @@ int init_server(unsigned short port) {
 }
 
 // tcp 
-int reactor_entry() {
+int lenn_epoll_entry() {
 
 	int port_count = 20;
 	unsigned short port = 2048;

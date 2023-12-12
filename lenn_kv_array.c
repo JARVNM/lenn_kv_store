@@ -6,9 +6,11 @@ typedef struct lenn_kv_array_s lenn_kv_array_t;
 
 lenn_kv_array_t array_table[ARRAY_MAX_LENGTH] = {0};
 int array_cnt = 0;
+int array_idx = 0;
 
 int lenn_kv_array_set(char* key, char* val)
 {
+
     if(key == NULL || val == NULL) return -1;
     char* kcopy = lenn_kv_malloc(strlen(key) + 1);
     if(kcopy == NULL)
@@ -24,9 +26,40 @@ int lenn_kv_array_set(char* key, char* val)
     }
     strncpy(vcopy, val, strlen(val) + 1);
 
-    array_table[array_cnt].key = kcopy;
-    array_table[array_cnt].val = vcopy;
-    array_cnt++;
+    int i = 0;
+#if 0
+    while(i < ARRAY_MAX_LENGTH)
+    {
+        if(array_table[i].key == NULL && array_table[i].val == NULL)
+        {
+            array_table[i].key = kcopy;
+            array_table[i].val = vcopy;
+            array_cnt++;
+            break;
+        }
+    }
+#endif
+    for(i = 0; i < array_idx; i++)
+    {
+        if(array_table[i].key == NULL)
+        {
+            array_table[i].key = kcopy;
+            array_table[i].val = vcopy;
+            array_cnt++;
+            return 0;
+        }
+    }
+
+    if(i < ARRAY_MAX_LENGTH && i == array_idx)
+    {
+        array_table[i].key = kcopy;
+        array_table[i].val = vcopy;
+        array_cnt++;
+        array_idx++;
+    }
+
+    return 0;
+
 }
 char* lenn_kv_array_get(char* key)
 {
@@ -55,7 +88,9 @@ int lenn_kv_array_del(char* key)
     }
     lenn_kv_free(array_table[i].key);
     lenn_kv_free(array_table[i].val);
-
+    array_table[i].key = NULL;
+    array_table[i].val = NULL;
+#if 0
     int j = i;
     for(j = i; j < j - 1; j++)
     {
@@ -65,30 +100,32 @@ int lenn_kv_array_del(char* key)
 
     array_table[array_cnt-1].key = NULL;
     array_table[array_cnt-1].val = NULL;
-
+#endif
     array_cnt--;
 
     return 0;
 }
 
-int lenn_kv_array_mod(char* key, char* oval, char* nval)
+int lenn_kv_array_mod(char* key, char* nval)
 {
     int i = 0;
     for(i = 0; i < array_cnt; i++)
     {
         if(strcmp(array_table[i].key, key) == 0)
         {
-            if(strcmp(array_table[i].val, oval) == 0)
-            {
-                lenn_kv_free(array_table[i].val);
-                char* vcopy = lenn_kv_malloc(strlen(nval) + 1);
-                strncpy(vcopy, nval, strlen(nval) + 1);
-                array_table[i].val = vcopy;
-                return 0;
-            }
+            lenn_kv_free(array_table[i].val);
+            char* vcopy = lenn_kv_malloc(strlen(nval) + 1);
+            strncpy(vcopy, nval, strlen(nval) + 1);
+            array_table[i].val = vcopy;
+            return 0;
         }
     }
 
     return -1;
 
+}
+
+int lenn_kv_array_count()
+{
+    return array_cnt;
 }
